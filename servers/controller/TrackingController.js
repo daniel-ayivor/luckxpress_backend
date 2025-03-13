@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
 const Shipment = require('../model/TrackingModel');
-
+const sequelize =require('../database/database')
 // Create transporter for sending email
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -16,52 +16,87 @@ const transporter = nodemailer.createTransport({
   secure: false,
 });
 
+// Register a new courier
 const RegisterCourier = async (req, res) => {
+  
+  console.log(req.body);
+  const transaction = await sequelize.transaction();
+
   try {
-    let {
+    const {
       username,
+      address,
       email,
       contact,
+      recieverName,
+      recieverAddress,
+      recieverEmail,
       packageName,
       packageTypes,
       weight,
+      quantity,
       shipmentMode,
+      shipmentType,
       carrier,
+      carrierRefNumber,
       origin,
       destination,
       pickupDate,
       deliveryDate,
-      shipmentStatus,
-      trackingCode = uuidv4().slice(0, 8), // Generate if tracking code is not provided
+      shipmentStatus ,
+      trackingCode 
     } = req.body;
 
-    console.log('Generated tracking code:', trackingCode);
+    // Parse and validate pickup and delivery dates
+    const pickupDateValue = pickupDate ? new Date(pickupDate) : null;
+    const deliveryDateValue = deliveryDate ? new Date(deliveryDate) : null;
 
-    // Ensure packageTypes is stored as a string
-    if (Array.isArray(packageTypes)) {
-      packageTypes = packageTypes.join(',');
+    if (pickupDate && isNaN(pickupDateValue)) {
+      return res.status(400).json({ message: 'Invalid pickup date format.' });
+    }
+    if (deliveryDate && isNaN(deliveryDateValue)) {
+      return res.status(400).json({ message: 'Invalid delivery date format.' });
     }
 
-    // Convert weight to numeric (assuming it may come as "8kg")
-    const numericWeight = parseFloat(weight.replace(/[^\d.]/g, '')) || 0;
+    // Validate weight
+    const numericWeight = parseFloat(
+      weight && typeof weight === 'string' ? weight.replace(/[^\d.]/g, '') : weight
+    ) || 0;
+    if (numericWeight <= 0) {
+      return res.status(400).json({ message: 'Weight must be greater than zero.' });
+    }
 
-    // Save shipment details
-    const shipment = await Shipment.create({
-      username,
-      email,
-      contact,
-      packageName,
-      packageTypes,
-      weight: numericWeight,
-      shipmentMode,
-      carrier,
-      origin,
-      destination,
-      pickupDate,
-      deliveryDate,
-      shipmentStatus,
-      trackingCode,
-    });
+    // Ensure packageTypes is a string
+    const formattedPackageTypes = Array.isArray(packageTypes) ? packageTypes.join(',') : packageTypes;
+
+    // Save shipment to the database
+    const shipment = await Shipment.create(
+      {
+        username,
+        address,
+        email,
+        contact,
+        recieverName,
+        recieverAddress,
+        recieverEmail,
+        packageName,
+        packageTypes: formattedPackageTypes,
+        weight,
+        quantity,
+        shipmentMode,
+        shipmentType,
+        carrier,
+        carrierRefNumber,
+        origin,
+        destination,
+        pickupDate,
+        deliveryDate,
+        shipmentStatus ,
+        trackingCode 
+      },
+     
+    );
+
 
     // Send email with tracking code
     await transporter.sendMail({
@@ -142,18 +177,26 @@ const updateShipment = async (req, res) => {
   const { trackingCode } = req.params;
   const {
     username,
+    address,
     email,
     contact,
+    recieverName,
+    recieverAddress,
+    recieverEmail,
     packageName,
     packageTypes,
     weight,
+    quantity,
     shipmentMode,
+    shipmentType,
     carrier,
+    carrierRefNumber,
     origin,
     destination,
     pickupDate,
     deliveryDate,
-    shipmentStatus,
+    shipmentStatus ,
+  
   } = req.body;
 
   try {
@@ -224,6 +267,65 @@ const deleteAllShipments = async (req, res) => {
   }
 };
 
+const validateShipmentInput = (req, res, next) => {
+  const {
+    username,
+    address,
+    email,
+    contact,
+    recieverName,
+    recieverAddress,
+    recieverEmail,
+    packageName,
+    packageTypes,
+    weight,
+    quantity,
+    shipmentMode,
+    shipmentType,
+    carrier,
+    carrierRefNumber,
+  } = req.body;
+
+  const requiredFields = [
+    { name: "username", value: username },
+    { name: "address", value: address },
+    { name: "email", value: email },
+    { name: "contact", value: contact },
+    { name: "recieverName", value: recieverName },
+    { name: "recieverAddress", value: recieverAddress },
+    { name: "recieverEmail", value: recieverEmail },
+    { name: "packageName", value: packageName },
+    { name: "packageTypes", value: packageTypes },
+    { name: "quantity", value: quantity },
+    { name: "shipmentType", value: shipmentType },
+    { name: "carrierRefNumber", value: carrierRefNumber },
+  ];
+
+  const missingFields = requiredFields.filter((field) => !field.value);
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      message: "Missing required fields",
+      missingFields: missingFields.map((field) => field.name),
+    });
+  }
+
+  if (!/^[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,7}$/.test(email)) {
+    return res.status(400).json({ message: "Invalid email format!" });
+  }
+
+  if (!/^[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,7}$/.test(recieverEmail)) {
+    return res.status(400).json({ message: "Invalid receiver email format!" });
+  }
+
+  if (!/^\d+$/.test(contact)) {
+    return res.status(400).json({ message: "Invalid contact format!" });
+  }
+
+  next();
+};
+
+
 module.exports = {
   RegisterCourier,
   getAllShipments,
@@ -231,4 +333,5 @@ module.exports = {
   updateShipment,
   deleteShipment,
   deleteAllShipments,
+  validateShipmentInput
 };

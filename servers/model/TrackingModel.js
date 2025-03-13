@@ -1,5 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/database');
+const Sequelize = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 const Shipment = sequelize.define(
   'Shipment',
@@ -30,6 +32,9 @@ const Shipment = sequelize.define(
     contact: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        is: /^[0-9]+$/, // Only numbers allowed
+      },
     },
 
     // Receiver Information
@@ -61,6 +66,9 @@ const Shipment = sequelize.define(
     weight: {
       type: DataTypes.FLOAT,
       allowNull: false,
+      validate: {
+        min: 0.1, 
+      },
       get() {
         const value = this.getDataValue('weight');
         return value ? parseFloat(value) : 0;
@@ -70,8 +78,11 @@ const Shipment = sequelize.define(
       },
     },
     quantity: {
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
       allowNull: false,
+      validate: {
+        min: 1, // Quantity must be at least 1
+      },
     },
 
     // Shipment Details
@@ -91,55 +102,61 @@ const Shipment = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    trackingCode: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
     shipmentStatus: {
       type: DataTypes.ENUM('Pending', 'Shipped', 'In Transit', 'Delivered', 'Cancelled'),
       allowNull: false,
       defaultValue: 'Pending',
     },
+    trackingCode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: () => uuidv4().slice(0, 12), // Generate default tracking code
+    },
 
     // Dates
     pickupDate: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW,
     },
     deliveryDate: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     departureTime: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.DATE,
+      allowNull: true,
     },
 
     // Locations
     origin: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     destination: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
 
     // Payment Information
     paymentMode: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.ENUM('Cash', 'Card', 'Online Transfer'),
+      allowNull: true,
     },
-    TotalFrieght: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    TotalFreight: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
   },
   {
     timestamps: true,
     tableName: 'Shipments',
-    indexes: [],
+    indexes: [
+      { fields: ['trackingCode'] },
+      { fields: ['shipmentStatus'] },
+      { fields: ['origin'] },
+      { fields: ['destination'] },
+    ],
   }
 );
 

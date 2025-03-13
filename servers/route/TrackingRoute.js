@@ -7,17 +7,18 @@ const {
   getShipmentByTrackingCode, 
   updateShipment, 
   deleteShipment ,
-  deleteAllShipments
+  deleteAllShipments,
+  validateShipmentInput
 } = require('../controller/TrackingController');
 
 
 
 // Shipment routes
 router.delete('/shipmentsAll', deleteAllShipments); 
-router.post('/shipments', RegisterCourier); // Create shipment
-router.get('/shipments', getAllShipments); // Get all shipments
-router.get('/shipments/:trackingCode', getShipmentByTrackingCode); // Get single shipment
-router.put('/shipments/:trackingCode', updateShipment); // Update shipment
-router.delete('/shipments/:trackingCode', deleteShipment); // Delete shipment
+router.post('/shipments', RegisterCourier); 
+router.get('/shipments', getAllShipments); 
+router.get('/shipments/:trackingCode', getShipmentByTrackingCode); 
+router.put('/shipments/:trackingCode', updateShipment);
+router.delete('/shipments/:trackingCode', deleteShipment);
 
 module.exports =router

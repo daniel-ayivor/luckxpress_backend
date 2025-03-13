@@ -17,8 +17,8 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(cors({
-    // origin: ["http://localhost:5174"],  // Adjust based on frontend URL
-    // credentials: true,  // Ensures cookies are sent
+    origin: ["http://localhost:5173"],  // Adjust based on frontend URL
+    credentials: true,  // Ensures cookies are sent
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -43,15 +43,27 @@ const syncDatabase = async () => {
     try {
         await sequelize.authenticate();
         console.log('Database connected...');
-        // await User.sync({ alter: true });
-        // console.log('User model synced!');
+        await User.sync({ alter: true });
+        console.log('User model synced!');
         // await Tracking.sync({ alter: true });
-        // console.log('Tracking model synced!');
+        console.log('Tracking model synced!');
         await Message.sync({alter: true})
     } catch (error) {
         console.error('Error syncing database:', error.message);
     }
 };
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+
+    if (err.name === 'SequelizeValidationError') {
+        res.status(400).json({ message: 'Validation Error', details: err.errors });
+    } else if (err.name === 'SequelizeUniqueConstraintError') {
+        res.status(400).json({ message: 'Unique Constraint Error', details: err.errors });
+    } else {
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 
 syncDatabase();
 
