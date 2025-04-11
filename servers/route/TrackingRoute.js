@@ -8,6 +8,7 @@ const {
   updateShipment, 
   deleteShipment ,
   deleteAllShipments,
+  getShipmentById,
   validateShipmentInput
 } = require('../controller/TrackingController');
 
@@ -17,8 +18,9 @@ const {
 router.delete('/shipmentsAll', deleteAllShipments); 
 router.post('/shipments', RegisterCourier); 
 router.get('/shipments', getAllShipments); 
-router.get('/shipments/:trackingCode', getShipmentByTrackingCode); 
-router.put('/shipments/:trackingCode', updateShipment);
-router.delete('/shipments/:trackingCode', deleteShipment);
+router.get('/shipments/:id', getShipmentById); 
+router.post('/shipments/:trackingCode', getShipmentByTrackingCode); 
+router.put('/shipments/:id', updateShipment);
+router.delete('/shipments/:id', deleteShipment);
 
 module.exports =router

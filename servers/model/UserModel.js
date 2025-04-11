@@ -1,21 +1,18 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../database/database");
-
+const { DataTypes } = require('sequelize');
+const sequelize = require('../database/database');
+const { v4: uuidv4 } = require('uuid');
 
 const User = sequelize.define('User', {
- 
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    // Other fields...
-  
+  id: {
+    type: DataTypes.STRING,
+    primaryKey: true,
+    defaultValue: () => uuidv4(), // Generate UUID automatically
+  },
   name: {
     type: DataTypes.STRING,
-    allowNull: false, // Ensures username cannot be null
+    allowNull: false,
     validate: {
-      notNull: {
+      notEmpty: {
         msg: 'Username is required', // Custom error message
       },
     },
@@ -25,9 +22,8 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true,
-      notNull: {
-        msg: 'Email is required',
+      isEmail: {
+        msg: 'Please provide a valid email address.',
       },
     },
   },
@@ -35,10 +31,33 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     validate: {
-      notNull: {
+      notEmpty: {
         msg: 'Password is required',
       },
     },
+  },
+  contact: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'contact is required',
+      },
+    },
+  },
+  role: {
+    type: DataTypes.ENUM("admin", "member"),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'contact is required',
+      },
+    },
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'inactive'), // Add status field
+    allowNull: false,
+    defaultValue: 'active', // Default status is 'active'
   },
 }, {
   timestamps: true,

@@ -8,7 +8,7 @@ const Shipment = sequelize.define(
   {
     // Primary Key
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       primaryKey: true,
       autoIncrement: true,
     },
@@ -26,31 +26,38 @@ const Shipment = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isEmail: true,
+        isEmail: {
+          msg: 'Please provide a valid email address.',
+        },
       },
     },
     contact: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        is: /^[0-9]+$/, // Only numbers allowed
+        is: {
+          args: /^[0-9]+$/,
+          msg: 'Contact number must contain only digits.',
+        },
       },
     },
 
     // Receiver Information
-    recieverName: {
+    receiverName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    recieverAddress: {
+    receiverAddress: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    recieverEmail: {
+    receiverEmail: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isEmail: true,
+        isEmail: {
+          msg: 'Please provide a valid email address.',
+        },
       },
     },
 
@@ -67,21 +74,20 @@ const Shipment = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
-        min: 0.1, 
-      },
-      get() {
-        const value = this.getDataValue('weight');
-        return value ? parseFloat(value) : 0;
-      },
-      set(value) {
-        this.setDataValue('weight', parseFloat(value));
+        min: {
+          args: [0.1],
+          msg: 'Weight must be at least 0.1.',
+        },
       },
     },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        min: 1, // Quantity must be at least 1
+        min: {
+          args: [1],
+          msg: 'Quantity must be at least 1.',
+        },
       },
     },
 
@@ -103,28 +109,28 @@ const Shipment = sequelize.define(
       allowNull: false,
     },
     shipmentStatus: {
-      type: DataTypes.ENUM('Pending', 'Shipped', 'In Transit', 'Delivered', 'Cancelled'),
+      type: DataTypes.ENUM('Pending', 'In Transit', 'Delivered', 'Cancelled'),
       allowNull: false,
       defaultValue: 'Pending',
     },
     trackingCode: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: () => uuidv4().slice(0, 12), // Generate default tracking code
+      defaultValue: () => 'SD' + uuidv4().slice(0, 10), // "SD" + 10 characters = 12 total
     },
 
     // Dates
     pickupDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: true,
       defaultValue: Sequelize.NOW,
     },
     deliveryDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     departureTime: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: true,
     },
 
@@ -151,12 +157,11 @@ const Shipment = sequelize.define(
   {
     timestamps: true,
     tableName: 'Shipments',
+ 
     indexes: [
-      { fields: ['trackingCode'] },
-      { fields: ['shipmentStatus'] },
-      { fields: ['origin'] },
-      { fields: ['destination'] },
-    ],
+      { fields: ['trackingCode'] }, 
+
+    ]
   }
 );
 

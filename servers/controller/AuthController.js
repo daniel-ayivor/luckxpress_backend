@@ -11,7 +11,7 @@ const validate = ajv.compile(userSchema);
 // Register User
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, contact } = req.body;
+    const { name, email, password, contact, role } = req.body;
     const valid = validate(req.body);
 
     if (!valid) {
@@ -34,7 +34,8 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashPassword,
-      contact
+      contact,
+      role
     });
 
     res.status(200).json({
@@ -51,7 +52,7 @@ const registerUser = async (req, res) => {
 // Login User
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
@@ -84,12 +85,32 @@ const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
+     // Set cookies
+     res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure in production
+      maxAge: 3600000, // 1 hour in milliseconds
+      sameSite: 'strict'
+    });
+
+    res.cookie('role', user.role, {
+      httpOnly: false, // So frontend can read it
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 3600000,
+      sameSite: 'strict'
+    });
+
+
     res.status(200).json({
       token,
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        status:user.status,
+        token:token,
+        role:user.role,
+        contact:user.contact,
       }
     });
 
@@ -109,6 +130,22 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const updateUser= async (req, res) => {
+  const { id } = req.params;
+  const { name, email, contact ,role} = req.body;
+
+  try {
+    // Update the user in the database
+    const updatedUser = await User.update(
+      { name, email, contact },
+      { where: { id } }
+    );
+    res.status(200).json({ user: updatedUser });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Failed to update user" });
+  }
+};
   // Delete a shipment by tracking code
 const UserDelete = async (req, res) => {
   const { userId } = req.params;
@@ -250,4 +287,4 @@ const logoutUser = async (req, res) => {
 };
 
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser};
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};

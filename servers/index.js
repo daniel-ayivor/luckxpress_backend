@@ -17,7 +17,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(cors({
-    origin: ["http://localhost:5173"],  // Adjust based on frontend URL
+    origin: ["http://localhost:8080"],  // Adjust based on frontend URL
     credentials: true,  // Ensures cookies are sent
 }));
 app.use(express.json());
