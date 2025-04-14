@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const {registerUser,loginUser, resetPassword,forgotPassword,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser}= require("../controller/AuthController");
-const verifyUser =require('../constant/verifyToken')
+const {registerUser,loginUser, verifyToken, resetPassword,forgotPassword,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser}= require("../controller/AuthController");
+
 
 
 // user routes
 router.post('/register', registerUser);
+router.get('/verify', verifyToken);
 router.post('/login', loginUser); 
 router.put('/update/:id', updateUser); 
 router.post('/forgot-password', forgotPassword);

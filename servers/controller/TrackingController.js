@@ -1,8 +1,9 @@
 const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
-const Shipment = require('../model/TrackingModel');
-const sequelize =require('../database/database')
-// Create transporter for sending email
+const mongoose = require('mongoose');
+const Shipment = require('../model/TrackingModel'); // This will now point to a Mongoose model
+
+// Create transporter for sending email (same as before)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -18,8 +19,8 @@ const transporter = nodemailer.createTransport({
 
 // Register a new courier
 const RegisterCourier = async (req, res) => {
-
-  const transaction = await sequelize.transaction();
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
     const {
@@ -27,9 +28,9 @@ const RegisterCourier = async (req, res) => {
       address,
       email,
       contact,
-      recieverName, // Note the misspelling
-      recieverAddress, // Note the misspelling
-      recieverEmail, // Note the misspelling
+      recieverName,
+      recieverAddress,
+      recieverEmail,
       packageName,
       packageTypes,
       weight,
@@ -43,11 +44,11 @@ const RegisterCourier = async (req, res) => {
       pickupDate,
       deliveryDate,
       shipmentStatus,
-      trackingCode: userProvidedTrackingCode// Rename to avoid confusion
+      trackingCode: userProvidedTrackingCode
     } = req.body;
 
     // Generate a unique tracking code if not provided
-const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
+    const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
 
     // Map the misspelled fields to the correct field names
     const receiverName = recieverName;
@@ -59,11 +60,13 @@ const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
     const deliveryDateValue = deliveryDate ? new Date(deliveryDate) : null;
 
     if (pickupDate && isNaN(pickupDateValue)) {
-      await transaction.rollback();
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: 'Invalid pickup date format.' });
     }
     if (deliveryDate && isNaN(deliveryDateValue)) {
-      await transaction.rollback();
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: 'Invalid delivery date format.' });
     }
 
@@ -72,40 +75,40 @@ const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
       weight && typeof weight === 'string' ? weight.replace(/[^\d.]/g, '') : weight
     ) || 0;
     if (numericWeight <= 0) {
-      await transaction.rollback();
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: 'Weight must be greater than zero.' });
     }
 
-    // Ensure packageTypes is a string
-    const formattedPackageTypes = Array.isArray(packageTypes) ? packageTypes.join(',') : packageTypes;
+    // Ensure packageTypes is an array (MongoDB handles arrays natively)
+    const formattedPackageTypes = Array.isArray(packageTypes) ? packageTypes : [packageTypes];
 
     // Save shipment to the database
-    const shipment = await Shipment.create(
-      {
-        username,
-        address,
-        email,
-        contact,
-        receiverName, // Use the corrected field name
-        receiverAddress, // Use the corrected field name
-        receiverEmail, // Use the corrected field name
-        packageName,
-        packageTypes: formattedPackageTypes,
-        weight,
-        quantity,
-        shipmentMode,
-        shipmentType,
-        carrier,
-        carrierRefNumber,
-        origin,
-        destination,
-        pickupDate,
-        deliveryDate,
-        shipmentStatus,
-        trackingCode // Use the generated or provided tracking code
-      },
-      { transaction }
-    );
+    const shipment = new Shipment({
+      username,
+      address,
+      email,
+      contact,
+      receiverName,
+      receiverAddress,
+      receiverEmail,
+      packageName,
+      packageTypes: formattedPackageTypes,
+      weight,
+      quantity,
+      shipmentMode,
+      shipmentType,
+      carrier,
+      carrierRefNumber,
+      origin,
+      destination,
+      pickupDate,
+      deliveryDate,
+      shipmentStatus,
+      trackingCode
+    });
+
+    await shipment.save({ session });
 
     // Send email with tracking code
     await transporter.sendMail({
@@ -146,12 +149,14 @@ const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
     });
 
     // Commit the transaction
-    await transaction.commit();
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({ message: 'Shipment created and email sent', shipment });
   } catch (error) {
     // Rollback the transaction in case of error
-    await transaction.rollback();
+    await session.abortTransaction();
+    session.endSession();
     console.error('Error creating shipment:', error);
     res.status(500).json({ message: 'Error creating shipment', error });
   }
@@ -160,7 +165,7 @@ const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
 // Get all shipments
 const getAllShipments = async (req, res) => {
   try {
-    const shipments = await Shipment.findAll();
+    const shipments = await Shipment.find();
     res.status(200).json({ message: 'Shipments retrieved successfully', shipments });
   } catch (error) {
     console.error(error);
@@ -168,34 +173,30 @@ const getAllShipments = async (req, res) => {
   }
 };
 
-
 // Get a single shipment by id
 const getShipmentById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const shipment = await Shipment.findOne({ where: { id } });
+    const shipment = await Shipment.findById(id);
 
     if (!shipment) {
       return res.status(404).json({ message: 'Shipment not found' });
     }
 
     res.status(200).json({ message: 'Shipment retrieved successfully', shipment });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error retrieving shipment', error });
   }
 };
-
-
 
 // Get a single shipment by tracking code
 const getShipmentByTrackingCode = async (req, res) => {
   const { trackingCode } = req.params;
 
   try {
-    const shipment = await Shipment.findOne({ where: { trackingCode } });
+    const shipment = await Shipment.findOne({ trackingCode });
 
     if (!shipment) {
       return res.status(404).json({ message: 'Shipment not found' });
@@ -208,7 +209,7 @@ const getShipmentByTrackingCode = async (req, res) => {
   }
 };
 
-// Update a shipment by tracking code
+// Update a shipment by id
 const updateShipment = async (req, res) => {
   const { id } = req.params;
   const {
@@ -216,9 +217,9 @@ const updateShipment = async (req, res) => {
     address,
     email,
     contact,
-    recieverName, // Note the misspelling
-    recieverAddress, // Note the misspelling
-    recieverEmail, // Note the misspelling
+    recieverName,
+    recieverAddress,
+    recieverEmail,
     packageName,
     packageTypes,
     weight,
@@ -232,41 +233,38 @@ const updateShipment = async (req, res) => {
     pickupDate,
     deliveryDate,
     shipmentStatus,
-   
-  
   } = req.body;
 
   try {
-    const shipment = await Shipment.findOne({ where: { id } });
+    const shipment = await Shipment.findById(id);
 
     if (!shipment) {
       return res.status(404).json({ message: 'Shipment not found' });
     }
 
     // Update shipment details
-    await shipment.update({
-      username,
-      address,
-      email,
-      contact,
-      recieverName, // Note the misspelling
-      recieverAddress, // Note the misspelling
-      recieverEmail, // Note the misspelling
-      packageName,
-      packageTypes,
-      weight,
-      quantity,
-      shipmentMode,
-      shipmentType,
-      carrier,
-      carrierRefNumber,
-      origin,
-      destination,
-      pickupDate,
-      deliveryDate,
-      shipmentStatus,
-      trackingCode: userProvidedTrackingCode 
-    });
+    shipment.username = username || shipment.username;
+    shipment.address = address || shipment.address;
+    shipment.email = email || shipment.email;
+    shipment.contact = contact || shipment.contact;
+    shipment.receiverName = recieverName || shipment.receiverName;
+    shipment.receiverAddress = recieverAddress || shipment.receiverAddress;
+    shipment.receiverEmail = recieverEmail || shipment.receiverEmail;
+    shipment.packageName = packageName || shipment.packageName;
+    shipment.packageTypes = Array.isArray(packageTypes) ? packageTypes : [packageTypes] || shipment.packageTypes;
+    shipment.weight = weight || shipment.weight;
+    shipment.quantity = quantity || shipment.quantity;
+    shipment.shipmentMode = shipmentMode || shipment.shipmentMode;
+    shipment.shipmentType = shipmentType || shipment.shipmentType;
+    shipment.carrier = carrier || shipment.carrier;
+    shipment.carrierRefNumber = carrierRefNumber || shipment.carrierRefNumber;
+    shipment.origin = origin || shipment.origin;
+    shipment.destination = destination || shipment.destination;
+    shipment.pickupDate = pickupDate || shipment.pickupDate;
+    shipment.deliveryDate = deliveryDate || shipment.deliveryDate;
+    shipment.shipmentStatus = shipmentStatus || shipment.shipmentStatus;
+
+    await shipment.save();
 
     res.status(200).json({ message: 'Shipment updated successfully', shipment });
   } catch (error) {
@@ -275,19 +273,16 @@ const updateShipment = async (req, res) => {
   }
 };
 
-// Delete a shipment by tracking code
+// Delete a shipment by id
 const deleteShipment = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const shipment = await Shipment.findOne({ where: { id } });
+    const shipment = await Shipment.findByIdAndDelete(id);
 
     if (!shipment) {
       return res.status(404).json({ message: 'Shipment not found' });
     }
-
-    // Delete shipment
-    await shipment.destroy();
 
     res.status(200).json({ message: 'Shipment deleted successfully' });
   } catch (error) {
@@ -299,19 +294,20 @@ const deleteShipment = async (req, res) => {
 // Delete all shipments
 const deleteAllShipments = async (req, res) => {
   try {
-    const result = await Shipment.destroy({ where: {} });
+    const result = await Shipment.deleteMany({});
 
-    if (result === 0) {
+    if (result.deletedCount === 0) {
       return res.status(404).json({ message: 'No shipments found to delete' });
     }
 
-    res.status(200).json({ message: 'All shipments deleted successfully' });
+    res.status(200).json({ message: 'All shipments deleted successfully', deletedCount: result.deletedCount });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error deleting shipments', error });
   }
 };
 
+// Input validation (same as before)
 const validateShipmentInput = (req, res, next) => {
   const {
     username,
@@ -369,7 +365,6 @@ const validateShipmentInput = (req, res, next) => {
 
   next();
 };
-
 
 module.exports = {
   RegisterCourier,

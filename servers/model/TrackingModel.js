@@ -1,168 +1,128 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../database/database');
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
-const Shipment = sequelize.define(
-  'Shipment',
-  {
-    // Primary Key
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-
-    // Sender Information
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    address: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isEmail: {
-          msg: 'Please provide a valid email address.',
-        },
-      },
-    },
-    contact: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        is: {
-          args: /^[0-9]+$/,
-          msg: 'Contact number must contain only digits.',
-        },
-      },
-    },
-
-    // Receiver Information
-    receiverName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    receiverAddress: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    receiverEmail: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isEmail: {
-          msg: 'Please provide a valid email address.',
-        },
-      },
-    },
-
-    // Package Information
-    packageName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    packageTypes: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    weight: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        min: {
-          args: [0.1],
-          msg: 'Weight must be at least 0.1.',
-        },
-      },
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: {
-          args: [1],
-          msg: 'Quantity must be at least 1.',
-        },
-      },
-    },
-
-    // Shipment Details
-    shipmentMode: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    shipmentType: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    carrier: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    carrierRefNumber: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    shipmentStatus: {
-      type: DataTypes.ENUM('Pending', 'In Transit', 'Delivered', 'Cancelled'),
-      allowNull: false,
-      defaultValue: 'Pending',
-    },
-    trackingCode: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: () => 'SD' + uuidv4().slice(0, 10), // "SD" + 10 characters = 12 total
-    },
-
-    // Dates
-    pickupDate: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: Sequelize.NOW,
-    },
-    deliveryDate: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    departureTime: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-    // Locations
-    origin: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    destination: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-    // Payment Information
-    paymentMode: {
-      type: DataTypes.ENUM('Cash', 'Card', 'Online Transfer'),
-      allowNull: true,
-    },
-    TotalFreight: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
+const shipmentSchema = new mongoose.Schema({
+  // Sender Information
+  username: {
+    type: String,
+    required: [true, 'Username is required'],
   },
-  {
-    timestamps: true,
-    tableName: 'Shipments',
- 
-    indexes: [
-      { fields: ['trackingCode'] }, 
+  address: {
+    type: String,
+    required: [true, 'Address is required'],
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    validate: {
+      validator: function(v) {
+        return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+      },
+      message: props => `${props.value} is not a valid email!`
+    }
+  },
+  contact: {
+    type: String,
+    required: [true, 'Contact is required'],
+    validate: {
+      validator: function(v) {
+        return /^[0-9]+$/.test(v);
+      },
+      message: props => `${props.value} must contain only digits!`
+    }
+  },
 
-    ]
-  }
-);
+  // Receiver Information
+  receiverName: {
+    type: String,
+    required: [true, 'Receiver name is required'],
+  },
+  receiverAddress: {
+    type: String,
+    required: [true, 'Receiver address is required'],
+  },
+  receiverEmail: {
+    type: String,
+    required: [true, 'Receiver email is required'],
+    validate: {
+      validator: function(v) {
+        return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+      },
+      message: props => `${props.value} is not a valid email!`
+    }
+  },
 
-module.exports = Shipment;
+  // Package Information
+  packageName: {
+    type: String,
+    required: [true, 'Package name is required'],
+  },
+  packageTypes: {
+    type: String,
+    required: [true, 'Package type is required'],
+  },
+  weight: {
+    type: Number,
+    required: [true, 'Weight is required'],
+    min: [0.1, 'Weight must be at least 0.1']
+  },
+  quantity: {
+    type: Number,
+    required: [true, 'Quantity is required'],
+    min: [1, 'Quantity must be at least 1']
+  },
+
+  // Shipment Details
+  shipmentMode: {
+    type: String,
+    required: [true, 'Shipment mode is required'],
+  },
+  shipmentType: {
+    type: String,
+    required: [true, 'Shipment type is required'],
+  },
+  carrier: {
+    type: String,
+    required: [true, 'Carrier is required'],
+  },
+  carrierRefNumber: {
+    type: String,
+    required: [true, 'Carrier reference number is required'],
+  },
+  shipmentStatus: {
+    type: String,
+    enum: ['Pending', 'In Transit', 'Delivered', 'Cancelled'],
+    default: 'Pending'
+  },
+  trackingCode: {
+    type: String,
+    default: () => 'SD' + uuidv4().slice(0, 10),
+    unique: true,
+    index: true // This is enough, remove the separate index creation
+  },
+
+  // Dates
+  pickupDate: {
+    type: Date,
+    default: Date.now
+  },
+  deliveryDate: Date,
+  departureTime: String,
+
+  // Locations
+  origin: String,
+  destination: String,
+
+  // Payment Information
+  paymentMode: {
+    type: String,
+    enum: ['Cash', 'Card', 'Online Transfer']
+  },
+  TotalFreight: Number
+}, {
+  timestamps: true
+});
+
+
+
+module.exports = mongoose.model('Shipment', shipmentSchema);

@@ -52,71 +52,115 @@ const registerUser = async (req, res) => {
 // Login User
 const loginUser = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
     // Find user by email
-    const user = await User.findOne({
-      where: { email }  // Fix: Sequelize syntax
-    });
-
+    const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Compare password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check JWT secret
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined");
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id },
+      { 
+        userId: user.id,
+        role: user.role 
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-     // Set cookies
-     res.cookie('token', token, {
+    // Set secure HTTP-only cookies
+    res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Secure in production
-      maxAge: 3600000, // 1 hour in milliseconds
-      sameSite: 'strict'
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 3600000, // 1 hour
+      sameSite: 'strict',
+      path: '/'
     });
 
     res.cookie('role', user.role, {
-      httpOnly: false, // So frontend can read it
+      httpOnly: false, // Allow frontend to read
       secure: process.env.NODE_ENV === 'production',
       maxAge: 3600000,
-      sameSite: 'strict'
+      sameSite: 'strict',
+      path: '/'
     });
 
-
     res.status(200).json({
-      token,
+      message: "Login successful",
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        status:user.status,
-        token:token,
-        role:user.role,
-        contact:user.contact,
+        role: user.role,
+        contact: user.contact
       }
     });
 
   } catch (error) {
-    console.error("Error logging in user", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error during login" });
+  }
+};
+
+const verifyToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    
+    if (!token) {
+      return res.status(401).json({ isAuthenticated: false });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if user still exists
+    const user = await User.findByPk(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ isAuthenticated: false });
+    }
+
+    res.status(200).json({
+      isAuthenticated: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        contact: user.contact
+      }
+    });
+
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ 
+        isAuthenticated: false,
+        message: "Token expired" 
+      });
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ 
+        isAuthenticated: false,
+        message: "Invalid token" 
+      });
+    }
+    console.error("Token verification error:", error);
+    res.status(500).json({ message: "Server error during token verification" });
   }
 };
 
@@ -146,11 +190,10 @@ const updateUser= async (req, res) => {
     res.status(500).json({ message: "Failed to update user" });
   }
 };
-  // Delete a shipment by tracking code
+
+// Delete a shipment by tracking code
 const UserDelete = async (req, res) => {
   const { userId } = req.params;
-
-
 
   try {
     if (!userId) {
@@ -262,29 +305,28 @@ const resetPassword = async (req, res) => {
     }
 };
 
-
 const logoutUser = async (req, res) => {
   try {
-    // Invalidate the token (Optional: store token in a blacklist if necessary)
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-
-    // Verify the token to ensure it's valid
-    jwt.verify(token, process.env.JWT_SECRET, (err) => {
-      if (err) {
-        return res.status(401).json({ message: "Invalid token" });
-      }
+    // Clear cookies
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+    
+    res.clearCookie('role', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
     });
 
-    // Respond with success
-    res.status(200).json({ message: "User logged out successfully" });
+    res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-    console.error("Error during logout", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Server error during logout" });
   }
 };
 
-
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
+module.exports = { registerUser, loginUser, verifyToken, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
