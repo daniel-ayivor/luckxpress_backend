@@ -53,13 +53,18 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Debugging: Log the stored and input passwords (remove in production)
+    console.log('Stored hash:', email);
+    console.log('Input password:', password);
 
+    // Validation
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
     // Find user by email
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({email});
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -67,6 +72,7 @@ const loginUser = async (req, res) => {
     // Compare password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+      console.log('Password comparison failed');
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -78,23 +84,16 @@ const loginUser = async (req, res) => {
     const token = jwt.sign(
       { 
         userId: user.id,
-        role: user.role 
+        role: user.role ,
+        
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "3h" }
     );
 
-    // Set secure HTTP-only cookies
+    // Set cookies
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 3600000, // 1 hour
-      sameSite: 'strict',
-      path: '/'
-    });
-
-    res.cookie('role', user.role, {
-      httpOnly: false, // Allow frontend to read
       secure: process.env.NODE_ENV === 'production',
       maxAge: 3600000,
       sameSite: 'strict',
@@ -109,7 +108,8 @@ const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         contact: user.contact
-      }
+      },
+      token: token 
     });
 
   } catch (error) {
@@ -166,7 +166,7 @@ const verifyToken = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const user = await User.findAll();
+    const user = await User.find();
     res.status(200).json({ message: 'Users retrieved successfully', user });
   } catch (error) {
     console.error(error);
@@ -174,44 +174,113 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-const updateUser= async (req, res) => {
-  const { id } = req.params;
-  const { name, email, contact ,role} = req.body;
 
+// Add this to your existing controller file
+const getUserProfile = async (req, res) => {
   try {
-    // Update the user in the database
-    const updatedUser = await User.update(
-      { name, email, contact },
-      { where: { id } }
-    );
-    res.status(200).json({ user: updatedUser });
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Failed to update user" });
-  }
-};
-
-// Delete a shipment by tracking code
-const UserDelete = async (req, res) => {
-  const { userId } = req.params;
-
-  try {
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
+    console.log('Request user:', req.user); // Debugging log
     
-    const user = await User.findOne({ where: { id: userId } });
+    if (!req.user?.userId) {
+      return res.status(401).json({ 
+        message: "Unauthorized - No user ID found",
+        debug: { user: req.user } // Additional debug info
+      });
+    }
+
+    const user = await User.findById(req.user.userId)
+      .select('-password -__v -resetToken');
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    await user.destroy();
+    res.status(200).json({
+      message: "User profile retrieved successfully",
+      user
+    });
 
-    res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ message: "Error deleting user", error });
+    console.error("Profile fetch error:", error);
+    res.status(500).json({ 
+      message: "Server error",
+      error: error.message 
+    });
+  }
+};
+
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, contact } = req.body;
+
+
+
+  try {
+    // Validate ID exists
+    if (!id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Update the user in the database
+    const result = await User.updateOne(
+      { _id: id }, // Filter by ID
+      { $set: { name, email, contact } } // Update these fields
+    );
+
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (result.modifiedCount === 0) {
+      return res.status(200).json({ 
+        message: "No changes made", 
+        user: await User.findById(id) 
+      });
+    }
+
+    res.status(200).json({ 
+      message: "User updated successfully",
+      user: await User.findById(id) 
+    });
+
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ 
+      message: "Failed to update user",
+      error: error.message 
+    });
+  }
+};
+
+// Delete a shipment by tracking code
+const UserDelete = async (req, res) => {
+  const { id } = req.params; // or _id if you prefer
+  
+  console.log("Deleting user with ID:", id);
+
+  try {
+    if (!id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // For UUID (since you're using UUID format)
+    const result = await User.deleteOne({ _id: id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ 
+      message: "User deleted successfully",
+      deletedId: id
+    });
+
+  } catch (error) {
+    console.error("Deletion error:", error);
+    return res.status(500).json({ 
+      message: "Error deleting user",
+      error: error.message 
+    });
   }
 };
 
@@ -329,4 +398,40 @@ const logoutUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, verifyToken, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
+// Change Password
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    if (!req.user?.userId) {
+      return res.status(401).json({ message: "Unauthorized - No user ID found" });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
+
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({ message: "Server error during password change" });
+  }
+};
+
+
+module.exports = { registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};

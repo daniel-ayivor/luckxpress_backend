@@ -1,18 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const {registerUser,loginUser, verifyToken, resetPassword,forgotPassword,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser}= require("../controller/AuthController");
+const {
+  registerUser,
+  loginUser,
+  verifyToken,
+  resetPassword,
+  forgotPassword,
+  logoutUser,
+  getAllUsers,
+  UserDelete,
+  deleteAllUser,
+  updateUser,
+  getUserProfile,
+  changePassword,
+} = require("../controller/AuthController");
+const authMiddleware = require('../constant/authMiddleware');
 
 
-
-// user routes
+// User routes
 router.post('/register', registerUser);
 router.get('/verify', verifyToken);
-router.post('/login', loginUser); 
-router.put('/update/:id', updateUser); 
+router.post('/login', loginUser);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
-router.post('/logout', logoutUser); 
-router.get('/getAllUser', getAllUsers); 
-router.delete('/delete/:userId', UserDelete); 
-router.delete('/delete', deleteAllUser); 
-module.exports =router  
+router.post('/logout', authMiddleware, logoutUser);
+router.post('/change/password', authMiddleware, changePassword);
+
+// Protected admin routes
+router.get('/profile', authMiddleware, getUserProfile); 
+router.put('/update/:id', authMiddleware, updateUser);
+router.get('/getAllUser', authMiddleware, getAllUsers);
+router.delete('/delete/:id', authMiddleware, UserDelete);
+router.delete('/delete', authMiddleware, deleteAllUser);
+
+module.exports = router;

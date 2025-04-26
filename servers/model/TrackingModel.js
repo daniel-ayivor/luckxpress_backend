@@ -57,10 +57,7 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Package name is required'],
   },
-  packageTypes: {
-    type: String,
-    required: [true, 'Package type is required'],
-  },
+
   weight: {
     type: Number,
     required: [true, 'Weight is required'],
@@ -81,10 +78,6 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Shipment type is required'],
   },
-  carrier: {
-    type: String,
-    required: [true, 'Carrier is required'],
-  },
   carrierRefNumber: {
     type: String,
     required: [true, 'Carrier reference number is required'],
@@ -98,7 +91,7 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     default: () => 'SD' + uuidv4().slice(0, 10),
     unique: true,
-    index: true // This is enough, remove the separate index creation
+    index: true 
   },
 
   // Dates
