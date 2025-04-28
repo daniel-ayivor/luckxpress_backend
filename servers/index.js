@@ -14,10 +14,14 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
-app.use(cookieParser());
 app.use(cors({
-    origin: ["http://localhost:8080"],  // Adjust based on frontend URL
-    credentials: true,  // Ensures cookies are sent
+    origin: [
+        "https://luckyexpress-dashboard.vercel.app",
+        "http://localhost:3000" // For local development
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
 }));
 
 // Routes
