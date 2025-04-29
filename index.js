@@ -14,21 +14,44 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
-app.use(cors({
-    origin: [
-        "https://luckxpress-backend.onrender.com"
-        // "https://luckyexpress-dashboard.vercel.app",
-        // "http://localhost:8080",
-        // "https://luckyxpress-cargo.vercel.app",
-        // "http://luckyxpress-cargo-oojw.vercel.app/",
-        // "http://localhost:5000",
-        // "http://localhost:3000" // For local development
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-}));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
+// Updated CORS configuration
+const corsOptions = {
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "https://luckxpress-backend.onrender.com",
+        "https://luckyexpress-dashboard.vercel.app",
+        "http://localhost:3000" // For development
+      ];
+      
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type", 
+      "Authorization",
+      "X-Requested-With",
+      "Accept"
+    ],
+    exposedHeaders: [
+      "Content-Length",
+      "Authorization",
+      "Set-Cookie"
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  };
+  
+  app.use(cors(corsOptions));
+  
+  // Handle preflight requests
+  app.options('*', cors(corsOptions));
 // Routes
 app.use('/auth', authRoute);
 app.use('/track', trackRoute);
