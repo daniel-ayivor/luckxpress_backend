@@ -5,8 +5,8 @@ const bodyParser = require('body-parser');
 const { config } = require('dotenv');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
-const authRoute = require('./route/UserRoute');
-const trackRoute = require('./route/TrackingRoute');
+const authRoute = require('./servers/route/UserRoute');
+const trackRoute = require('./servers/route/TrackingRoute');
 config();
 
 const app = express();
