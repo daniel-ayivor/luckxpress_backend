@@ -16,9 +16,12 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors({
     origin: [
-        '*',
+        "https://luckxpress-backend.onrender.com"
         // "https://luckyexpress-dashboard.vercel.app",
+        // "http://localhost:8080",
+        // "https://luckyxpress-cargo.vercel.app",
         // "http://luckyxpress-cargo-oojw.vercel.app/",
+        // "http://localhost:5000",
         // "http://localhost:3000" // For local development
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -44,22 +47,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// Connect to MongoDB
-// In your main server file, update the MongoDB connection:
 
-// const connectDatabase = async () => {
-//     try {
-//         console.log('Attempting to connect with URI:', 'mongodb+srv://luckyxpress:luckyxpress%4023@cluster0.zh7sm1a.mongodb.net/luckyexpress?retryWrites=true&w=majority&appName=Cluster0'); // Debug line
-//         await mongoose.connect('mongodb+srv://luckyxpress:luckyxpress%4023@cluster0.zh7sm1a.mongodb.net/luckyexpress?retryWrites=true&w=majority&appName=Cluster0', {
-//             useNewUrlParser: true,
-//             useUnifiedTopology: true
-//         });
-//         console.log('MongoDB connected...');
-//     } catch (error) {
-//         console.error('Error connecting to MongoDB:', error.message);
-//         process.exit(1);
-//     }
-// };
 const connectDatabase = async () => {
     try {
         await mongoose.connect('mongodb+srv://luckyxpress:luckyxpress%4023@cluster0.zh7sm1a.mongodb.net/luckyexpress?retryWrites=true&w=majority&appName=Cluster0');
