@@ -45,7 +45,6 @@ const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.log("Error registering user", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -54,10 +53,6 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Debugging: Log the stored and input passwords (remove in production)
-    console.log('Stored hash:', email);
-    console.log('Input password:', password);
 
     // Validation
     if (!email || !password) {
@@ -73,7 +68,6 @@ const loginUser = async (req, res) => {
     // Compare password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      console.log('Password comparison failed');
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -114,14 +108,12 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Login error:", error);
+    res.status(404).json("Login error:", error);
     res.status(500).json({ message: "Server error during login" });
   }
 };
 
-const checker = (req, res)=>{
-  res.send("here")
-}
+
 
 const verifyToken = async (req, res) => {
   try {
@@ -164,8 +156,7 @@ const verifyToken = async (req, res) => {
         message: "Invalid token" 
       });
     }
-    console.error("Token verification error:", error);
-    res.status(500).json({ message: "Server error during token verification" });
+    res.status(500).json({ message: "Server error during token verification" , error: error.message });
   }
 };
 
@@ -174,7 +165,6 @@ const getAllUsers = async (req, res) => {
     const user = await User.find();
     res.status(200).json({ message: 'Users retrieved successfully', user });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Error retrieving users', error });
   }
 };
@@ -183,7 +173,6 @@ const getAllUsers = async (req, res) => {
 // Add this to your existing controller file
 const getUserProfile = async (req, res) => {
   try {
-    console.log('Request user:', req.user); // Debugging log
     
     if (!req.user?.userId) {
       return res.status(401).json({ 
@@ -205,7 +194,6 @@ const getUserProfile = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Profile fetch error:", error);
     res.status(500).json({ 
       message: "Server error",
       error: error.message 
@@ -249,7 +237,6 @@ const updateUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error updating user:", error);
     res.status(500).json({ 
       message: "Failed to update user",
       error: error.message 
@@ -260,8 +247,6 @@ const updateUser = async (req, res) => {
 // Delete a shipment by tracking code
 const UserDelete = async (req, res) => {
   const { id } = req.params; // or _id if you prefer
-  
-  console.log("Deleting user with ID:", id);
 
   try {
     if (!id) {
@@ -281,7 +266,7 @@ const UserDelete = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Deletion error:", error);
+
     return res.status(500).json({ 
       message: "Error deleting user",
       error: error.message 
@@ -302,7 +287,7 @@ const deleteAllUser = async (req, res) => {
 
     res.status(200).json({ message: 'All shipments deleted successfully' });
   } catch (error) {
-    console.error(error);
+  
     res.status(500).json({ message: 'Error deleting shipments', error });
   }
 };
@@ -347,7 +332,7 @@ const forgotPassword = async (req, res) => {
         res.json({ message: "Password reset email sent. Please check your inbox." });
 
     } catch (error) {
-        console.error("Error in forgot password", error);
+      
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -374,7 +359,7 @@ const resetPassword = async (req, res) => {
         res.json({ message: "Password reset successfully." });
 
     } catch (error) {
-        console.error("Error resetting password", error);
+        
         res.status(400).json({ message: "Invalid or expired token." });
     }
 };
@@ -398,8 +383,8 @@ const logoutUser = async (req, res) => {
 
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ message: "Server error during logout" });
+
+    res.status(500).json({ message: "Server error during logout" , error: error.message });
   }
 };
 
@@ -433,10 +418,10 @@ const changePassword = async (req, res) => {
     res.status(200).json({ message: "Password changed successfully" });
 
   } catch (error) {
-    console.error("Error changing password:", error);
-    res.status(500).json({ message: "Server error during password change" });
+
+    res.status(500).json({ message: "Server error during password change" , error: error.message });
   }
 };
 
 
-module.exports = { checker, registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
+module.exports = { registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};

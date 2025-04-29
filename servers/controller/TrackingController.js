@@ -264,7 +264,7 @@ const getShipmentByTrackingCode = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching shipment:', error);
+   
     res.status(500).json({
       success: false,
       message: 'Failed to fetch shipment',
@@ -405,7 +405,7 @@ const deleteShipment = async (req, res) => {
       message: 'Shipment deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting shipment:', error);
+
     res.status(500).json({
       success: false,
       message: 'Failed to delete shipment',
@@ -427,7 +427,6 @@ const deleteAllShipments = async (req, res) => {
       deletedCount: result.deletedCount
     });
   } catch (error) {
-    console.error('Error deleting shipments:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete shipments',
