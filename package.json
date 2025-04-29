@@ -2,18 +2,18 @@
   "name": "servers",
   "version": "1.0.0",
   "main": "index.js",
-"scripts": {
-  "clean": "npx rimraf node_modules package-lock.json",
-  "reinstall": "npm run clean && npm install",
-  "start": "node index.js"
-},
+  "scripts": {
+    "clean": "npx rimraf node_modules package-lock.json",
+    "reinstall": "npm run clean && npm install",
+    "start": "node index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "ajv": "^8.17.1",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
