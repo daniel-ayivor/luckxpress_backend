@@ -23,6 +23,8 @@ const corsOptions = {
       const allowedOrigins = [
         "https://luckxpress-backend.onrender.com",
         "https://luckyexpress-dashboard.vercel.app",
+        "https://friendly-courier-hub-ec1o.vercel.app",
+        "https://luckyxpress-cargo-oojw.vercel.app",
         "http://localhost:3000" // For development
       ];
       
