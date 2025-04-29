@@ -16,9 +16,10 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors({
     origin: [
-        "https://luckyexpress-dashboard.vercel.app",
-        "http://luckyxpress-cargo-oojw.vercel.app/",
-        "http://localhost:3000" // For local development
+        '*',
+        // "https://luckyexpress-dashboard.vercel.app",
+        // "http://luckyxpress-cargo-oojw.vercel.app/",
+        // "http://localhost:3000" // For local development
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
