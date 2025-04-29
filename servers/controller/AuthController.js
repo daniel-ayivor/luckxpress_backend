@@ -118,6 +118,10 @@ const loginUser = async (req, res) => {
   }
 };
 
+const checker = (req, res)=>{
+  res.send("here")
+}
+
 const verifyToken = async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -434,4 +438,4 @@ const changePassword = async (req, res) => {
 };
 
 
-module.exports = { registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
+module.exports = { checker, registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};

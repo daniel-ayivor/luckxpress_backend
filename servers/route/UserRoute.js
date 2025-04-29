@@ -13,6 +13,7 @@ const {
   updateUser,
   getUserProfile,
   changePassword,
+  checker,
 } = require("../controller/AuthController");
 const authMiddleware = require('../constant/authMiddleware');
 
@@ -20,6 +21,7 @@ const authMiddleware = require('../constant/authMiddleware');
 // User routes
 router.post('/register', registerUser);
 router.get('/verify', verifyToken);
+router.get('/check', checker);
 router.post('/login', loginUser);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
