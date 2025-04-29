@@ -45,6 +45,7 @@ const registerUser = async (req, res) => {
     });
 
   } catch (error) {
+
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -68,6 +69,7 @@ const loginUser = async (req, res) => {
     // Compare password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+     
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -156,7 +158,8 @@ const verifyToken = async (req, res) => {
         message: "Invalid token" 
       });
     }
-    res.status(500).json({ message: "Server error during token verification" , error: error.message });
+  
+    res.status(500).json({ message: "Server error during token verification" });
   }
 };
 
@@ -165,6 +168,7 @@ const getAllUsers = async (req, res) => {
     const user = await User.find();
     res.status(200).json({ message: 'Users retrieved successfully', user });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Error retrieving users', error });
   }
 };
@@ -173,6 +177,7 @@ const getAllUsers = async (req, res) => {
 // Add this to your existing controller file
 const getUserProfile = async (req, res) => {
   try {
+    console.log('Request user:', req.user); // Debugging log
     
     if (!req.user?.userId) {
       return res.status(401).json({ 
@@ -266,7 +271,6 @@ const UserDelete = async (req, res) => {
     });
 
   } catch (error) {
-
     return res.status(500).json({ 
       message: "Error deleting user",
       error: error.message 
@@ -287,7 +291,7 @@ const deleteAllUser = async (req, res) => {
 
     res.status(200).json({ message: 'All shipments deleted successfully' });
   } catch (error) {
-  
+    console.error(error);
     res.status(500).json({ message: 'Error deleting shipments', error });
   }
 };
@@ -332,7 +336,6 @@ const forgotPassword = async (req, res) => {
         res.json({ message: "Password reset email sent. Please check your inbox." });
 
     } catch (error) {
-      
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -359,7 +362,6 @@ const resetPassword = async (req, res) => {
         res.json({ message: "Password reset successfully." });
 
     } catch (error) {
-        
         res.status(400).json({ message: "Invalid or expired token." });
     }
 };
@@ -383,8 +385,7 @@ const logoutUser = async (req, res) => {
 
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-
-    res.status(500).json({ message: "Server error during logout" , error: error.message });
+    res.status(500).json({ message: "Server error during logout" });
   }
 };
 
@@ -418,10 +419,10 @@ const changePassword = async (req, res) => {
     res.status(200).json({ message: "Password changed successfully" });
 
   } catch (error) {
-
-    res.status(500).json({ message: "Server error during password change" , error: error.message });
+   
+    res.status(500).json({ message: "Server error during password change" });
   }
 };
 
 
-module.exports = { registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
+module.exports = {  registerUser, changePassword, loginUser, verifyToken, getUserProfile, forgotPassword, resetPassword ,logoutUser,getAllUsers,UserDelete, deleteAllUser, updateUser};
