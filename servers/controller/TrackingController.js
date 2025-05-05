@@ -6,7 +6,7 @@ const Shipment = require('../model/TrackingModel');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: "danielkofiayivor23@gmail.com",
+    user: "lxpresscargo.ltd@gmail.com",
     pass: "mbiu vyns cfzd auph"
   }
 });
@@ -121,7 +121,7 @@ const RegisterCourier = async (req, res) => {
     // Send confirmation email
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: "lxpresscargo.ltd@gmail.com",
         to: email,
         subject: 'Your Shipment Tracking Code',
         html: `
