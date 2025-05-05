@@ -94,39 +94,40 @@ const RegisterCourier = async (req, res) => {
       });
     }
 
-    console.log('Shipment object before saving:', shipment);
+ // Create and save shipment
+const shipment = new Shipment({
+  username,
+  address,
+  email,
+  contact,
+  receiverName,
+  receiverAddress,
+  receiverEmail,
+  packageName,
+  weight: numericWeight,
+  quantity: numericQuantity,
+  shipmentMode,
+  shipmentType,
+  carrierRefNumber,
+  origin,
+  destination,
+  pickupDate: pickupDateObj,
+  deliveryDate: deliveryDateObj,
+  shipmentStatus: shipmentStatus || 'Pending',
+  trackingCode
+});
 
-    // Create and save shipment
-    const shipment = new Shipment({
-      username,
-      address,
-      email,
-      contact,
-      receiverName,
-      receiverAddress,
-      receiverEmail,
-      packageName,
-      weight: numericWeight,
-      quantity: numericQuantity,
-      shipmentMode,
-      shipmentType,
-      carrierRefNumber,
-      origin,
-      destination,
-      pickupDate: pickupDateObj,
-      deliveryDate: deliveryDateObj,
-      shipmentStatus: shipmentStatus || 'Pending',
-      trackingCode
-    });
+await shipment.save();
 
-    await shipment.save();
-
+console.log('Shipment saved successfully:', shipment);
     // Send confirmation email
    // Send confirmation email
+// Send confirmation email
 try {
   console.log('Attempting to send email to:', email);
-  console.log('Email details:', {
-    from: "lxpresscargo.ltd@gmail.com",
+  
+  const mailOptions = {
+    from: '"Lxpress Cargo" <lxpresscargo.ltd@gmail.com>',  // More professional format
     to: email,
     subject: 'Your Shipment Tracking Code',
     html: `
@@ -138,23 +139,11 @@ try {
       <p>Thank you for using our service!</p>
     </div>
     `
-  });
-
-  const mailOptions = {
-    from: 'lxpresscargo.ltd@gmail.com',
-    to: email,
-    subject: 'Your Shipment Tracking Code',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Hello, ${username}</h2>
-        <p>Your shipment has been registered successfully.</p>
-        <p><strong>Tracking Code:</strong> ${trackingCode}</p>
-        <p><strong>Status:</strong> ${shipment.shipmentStatus}</p>
-        <p>Thank you for using our service!</p>
-      </div>
-    `
   };
-  
+
+  // Verify transporter connection first
+  await transporter.verify();
+  console.log('SMTP connection verified');
 
   const info = await transporter.sendMail(mailOptions);
   console.log('Email sent successfully:', {
