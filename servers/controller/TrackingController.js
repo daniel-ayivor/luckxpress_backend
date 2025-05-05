@@ -119,25 +119,45 @@ const RegisterCourier = async (req, res) => {
     await shipment.save();
 
     // Send confirmation email
-    try {
-      await transporter.sendMail({
-        from: "lxpresscargo.ltd@gmail.com",
-        to: email,
-        subject: 'Your Shipment Tracking Code',
-        html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Hello, ${username}</h2>
-          <p>Your shipment has been registered successfully.</p>
-          <p><strong>Tracking Code:</strong> ${trackingCode}</p>
-          <p><strong>Status:</strong> ${shipment.shipmentStatus}</p>
-          <p>Thank you for using our service!</p>
-        </div>
-        `
-      });
-    } catch (emailError) {
-      console.error('Failed to send email:', emailError);
-      // Don't fail the request if email fails
-    }
+   // Send confirmation email
+try {
+  console.log('Attempting to send email to:', email);
+  console.log('Email details:', {
+    from: "lxpresscargo.ltd@gmail.com",
+    to: email,
+    subject: 'Your Shipment Tracking Code',
+    html: `...` // shortened for readability
+  });
+
+  const mailOptions = {
+    from: '"Lxpress Cargo" <lxpresscargo.ltd@gmail.com>',
+    to: email,
+    subject: 'Your Shipment Tracking Code',
+    html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Hello, ${username}</h2>
+      <p>Your shipment has been registered successfully.</p>
+      <p><strong>Tracking Code:</strong> ${trackingCode}</p>
+      <p><strong>Status:</strong> ${shipment.shipmentStatus}</p>
+      <p>Thank you for using our service!</p>
+    </div>
+    `
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log('Email sent successfully:', {
+    messageId: info.messageId,
+    accepted: info.accepted,
+    rejected: info.rejected
+  });
+} catch (emailError) {
+  console.error('Email sending failed with details:', {
+    error: emailError.message,
+    stack: emailError.stack,
+    response: emailError.response,
+    fullError: JSON.stringify(emailError, Object.getOwnPropertyNames(emailError))
+  });
+}
 
     res.status(201).json({
       success: true,
