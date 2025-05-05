@@ -8,8 +8,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: "lxpresscargo.ltd@gmail.com",
     pass: "mbiu vyns cfzd auph"
-  }
+  },
+  logger: true,  // enable logging
+  debug: true     // include SMTP traffic
 });
+
 
 
 const RegisterCourier = async (req, res) => {
@@ -91,7 +94,7 @@ const RegisterCourier = async (req, res) => {
       });
     }
 
-
+    console.log('Shipment object before saving:', shipment);
 
     // Create and save shipment
     const shipment = new Shipment({
@@ -126,13 +129,6 @@ try {
     from: "lxpresscargo.ltd@gmail.com",
     to: email,
     subject: 'Your Shipment Tracking Code',
-    html: `...` // shortened for readability
-  });
-
-  const mailOptions = {
-    from: '"Lxpress Cargo" <lxpresscargo.ltd@gmail.com>',
-    to: email,
-    subject: 'Your Shipment Tracking Code',
     html: `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Hello, ${username}</h2>
@@ -142,7 +138,23 @@ try {
       <p>Thank you for using our service!</p>
     </div>
     `
+  });
+
+  const mailOptions = {
+    from: 'lxpresscargo.ltd@gmail.com',
+    to: email,
+    subject: 'Your Shipment Tracking Code',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Hello, ${username}</h2>
+        <p>Your shipment has been registered successfully.</p>
+        <p><strong>Tracking Code:</strong> ${trackingCode}</p>
+        <p><strong>Status:</strong> ${shipment.shipmentStatus}</p>
+        <p>Thank you for using our service!</p>
+      </div>
+    `
   };
+  
 
   const info = await transporter.sendMail(mailOptions);
   console.log('Email sent successfully:', {
@@ -166,6 +178,8 @@ try {
         trackingCode,
         shipmentId: shipment._id,
         status: shipment.shipmentStatus,
+        email: shipment.email,
+        username: shipment.username,
         createdAt: shipment.createdAt,  // Add this
         updatedAt: shipment.updatedAt   // Add this
       }
