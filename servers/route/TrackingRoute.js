@@ -17,7 +17,7 @@ const {
 // Shipment routes
 router.delete('/shipmentsAll', deleteAllShipments); 
 router.post('/shipments', RegisterCourier); 
-router.post('/shipments/:trackingCode', getShipmentByTrackingCode); 
+router.get('/shipments/:trackingCode', getShipmentByTrackingCode); 
 router.get('/shipments', getAllShipments); 
 router.get('/shipments/:id', getShipmentById); 
 router.put('/shipments/update/:id', updateShipment);
