@@ -20,13 +20,14 @@ app.use(cookieParser());
 // Updated CORS configuration
 const corsOptions = {
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        "https://luckxpress-backend.onrender.com",
-        "https://luckyexpress-dashboard.vercel.app",
-        "https://friendly-courier-hub-ec1o.vercel.app",
-        "https://luckyxpress-cargo-oojw.vercel.app",
-        "http://localhost:3000" // For development
-      ];
+const allowedOrigins = [
+  "https://lxpresscargo.com",                // <-- Your frontend domain (production)
+  "https://luckxpress-backend.onrender.com", // <-- Backend domain (sometimes useful, e.g. SSR or internal)
+  "https://luckyexpress-dashboard.vercel.app",
+  "https://friendly-courier-hub-ec1o.vercel.app",
+  "https://luckyxpress-cargo-oojw.vercel.app",
+  "http://localhost:3000"                     // For local dev
+];
       
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
