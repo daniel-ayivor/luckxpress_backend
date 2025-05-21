@@ -53,6 +53,7 @@ const RegisterCourier = async (req, res) => {
       pickupDate,
       deliveryDate,
       shipmentStatus,
+      ShipmentUpdate,
       trackingCode: userProvidedTrackingCode
     } = req.body;
 
@@ -109,6 +110,7 @@ const shipment = new Shipment({
   shipmentMode,
   shipmentType,
   carrierRefNumber,
+  ShipmentUpdate,
   origin,
   destination,
   pickupDate: pickupDateObj,
@@ -309,7 +311,7 @@ const updateShipment = async (req, res) => {
       'packageName', 'weight', 'quantity',
       'shipmentMode', 'shipmentType',  'carrierRefNumber',
       'origin', 'destination', 'pickupDate', 'deliveryDate',
-      'shipmentStatus'
+      'shipmentStatus','ShipmentUpdate'
     ];
 
     // Build update object

@@ -84,9 +84,14 @@ const shipmentSchema = new mongoose.Schema({
   },
   shipmentStatus: {
     type: String,
-    enum: ['Pending', 'In Transit', 'Delivered', 'Cancelled'],
+    enum: ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered'],
     default: 'Pending'
   },
+ShipmentUpdate: {
+  type: String,
+  required: false // this field is optional
+},
+
   trackingCode: {
     type: String,
     default: () => 'SD' + uuidv4().slice(0, 10),
