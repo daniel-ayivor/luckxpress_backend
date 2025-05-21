@@ -237,14 +237,13 @@ const getAllShipments = async (req, res) => {
  */
 const getShipmentById = async (req, res) => {
   try {
-    const shipment = await Shipment.findOne({ trackingCode: req.params.id }); // Use trackingCode instead of _id
+    const shipment = await Shipment.findById(req.params.id);
     if (!shipment) {
       return res.status(404).json({
         success: false,
         message: 'Shipment not found'
       });
     }
-
     res.status(200).json({
       success: true,
       data: {
@@ -262,6 +261,7 @@ const getShipmentById = async (req, res) => {
     });
   }
 };
+
 
 /**
  * Get shipment by tracking code
