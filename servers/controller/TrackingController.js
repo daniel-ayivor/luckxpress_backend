@@ -237,21 +237,20 @@ const getAllShipments = async (req, res) => {
  */
 const getShipmentById = async (req, res) => {
   try {
-    const shipment = await Shipment.findById(req.params.id);
+    const shipment = await Shipment.findOne({ _id: req.params.id });
+    
     if (!shipment) {
       return res.status(404).json({
         success: false,
         message: 'Shipment not found'
       });
     }
+    
     res.status(200).json({
       success: true,
-      data: {
-        ...shipment.toObject(),
-        createdAt: shipment.createdAt,
-        updatedAt: shipment.updatedAt
-      }
+      data: shipment
     });
+    
   } catch (error) {
     console.error('Error fetching shipment:', error);
     res.status(500).json({
