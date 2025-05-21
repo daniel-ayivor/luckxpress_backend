@@ -19,7 +19,7 @@ router.delete('/shipmentsAll', deleteAllShipments);
 router.post('/shipments', RegisterCourier); 
 router.get('/shipments/:trackingCode', getShipmentByTrackingCode); 
 router.get('/shipments', getAllShipments); 
-router.get('/shipments/update/:id', getShipmentById); 
+router.get('/shipments/id/:id', getShipmentById); 
 router.put('/shipments/update/:id', updateShipment);
 router.delete('/shipments/delete/:id', deleteShipment);
 
