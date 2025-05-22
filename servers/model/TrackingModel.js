@@ -84,7 +84,7 @@ const shipmentSchema = new mongoose.Schema({
   },
   shipmentStatus: {
     type: String,
-    enum: ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered'],
+    enum: ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'On hold'],
     default: 'Pending'
   },
 ShipmentUpdate: {
