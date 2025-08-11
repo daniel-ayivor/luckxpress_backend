@@ -94,7 +94,7 @@ ShipmentUpdate: {
 
   trackingCode: {
     type: String,
-    default: () => 'SD' + uuidv4().slice(0, 10),
+    default: () => 'TRCKN' + uuidv4().slice(0, 10),
     unique: true,
     index: true 
   },

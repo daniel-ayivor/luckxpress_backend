@@ -58,7 +58,7 @@ const RegisterCourier = async (req, res) => {
     } = req.body;
 
     // Generate tracking code
-    const trackingCode = userProvidedTrackingCode || 'SD' + uuidv4().slice(0, 10);
+    const trackingCode = userProvidedTrackingCode || 'TRCKN' + uuidv4().slice(0, 10);
 
     // Validate dates
     const pickupDateObj = pickupDate ? new Date(pickupDate) : new Date();
