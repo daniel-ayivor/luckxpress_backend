@@ -68,7 +68,22 @@ const shipmentSchema = new mongoose.Schema({
     required: [true, 'Quantity is required'],
     min: [1, 'Quantity must be at least 1']
   },
+  height: {
+    type: Number,   
+    required: [true, 'Height is required'],
+    min: [0.1, 'Height must be at least 0.1'] 
+  },
+  width: {  
+    type: Number,
+    required: [true, 'Width is required'],
+    min: [0.1, 'Width must be at least 0.1']
+  },      
 
+  length: {
+    type: Number,   
+    required: [true, 'Length is required'],
+    min: [0.1, 'Length must be at least 0.1']
+  },
   // Shipment Details
   shipmentMode: {
     type: String,
@@ -106,7 +121,7 @@ ShipmentUpdate: {
   },
   deliveryDate: Date,
   departureTime: String,
-
+  
   // Locations
   origin: String,
   destination: String,

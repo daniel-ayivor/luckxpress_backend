@@ -43,6 +43,9 @@ const RegisterCourier = async (req, res) => {
       receiverAddress,
       receiverEmail,
       packageName,
+      height,
+      width,  
+      length,
       weight,
       quantity,
       shipmentMode,
@@ -105,6 +108,9 @@ const shipment = new Shipment({
   receiverAddress,
   receiverEmail,
   packageName,
+     height,
+      width,  
+      length,
   weight: numericWeight,
   quantity: numericQuantity,
   shipmentMode,
@@ -311,7 +317,7 @@ const updateShipment = async (req, res) => {
       'packageName', 'weight', 'quantity',
       'shipmentMode', 'shipmentType',  'carrierRefNumber',
       'origin', 'destination', 'pickupDate', 'deliveryDate',
-      'shipmentStatus','ShipmentUpdate'
+      'shipmentStatus','ShipmentUpdate','length', 'width', 'height'
     ];
 
     // Build update object
